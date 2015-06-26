@@ -6,7 +6,6 @@ import org.apache.spark.Partition
 
 /**
  * @author gustavonalle
- * @since 8.0
  */
 trait Splitter {
 
@@ -32,10 +31,12 @@ class PerServerSplitter extends Splitter {
          segmentsByServer.zipWithIndex.map {
             case ((server, segments), index) =>
                val split = collection.mutable.Set[Integer]()
-               split ++= segments.intersect(available).diff(taken).take(segmentsPerServer)
-               split ++= segments.diff(taken).take(segmentsPerServer - split.size)
+               val leftFromPrevious = segments.intersect(available).diff(taken).take(segmentsPerServer)
+               val notTaken = segments.diff(taken)
+               split ++= leftFromPrevious
+               split ++= notTaken.take(segmentsPerServer - split.size)
                taken ++= split
-               available ++= segments.diff(taken)
+               available ++= notTaken
                new InfinispanPartition(index, Location(server), Some(split.toSet), cacheName, batch)
          }.toArray
       }

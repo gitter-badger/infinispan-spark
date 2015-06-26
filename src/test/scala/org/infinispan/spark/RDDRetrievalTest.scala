@@ -8,7 +8,8 @@ abstract class RDDRetrievalTest extends FunSuite with Matchers {
    self: WordCache with Spark =>
 
    test("RDD Operators") {
-      val infinispanRDD = new InfinispanRDD[Integer, String](sc)
+      val infinispanRDD = new InfinispanRDD[Int, String](sc)
+
       // Count
       infinispanRDD.count() shouldBe getNumEntries
 
@@ -21,37 +22,37 @@ abstract class RDDRetrievalTest extends FunSuite with Matchers {
       map.forall { case (k, v) => v == 1 } shouldBe true
 
       // Filter
-      val halfSize = getNumEntries / 2
-      val filteredRDD = infinispanRDD.filter { case (k, _) => k > halfSize }
-      halfSize shouldBe filteredRDD.count()
+      val filteredRDD = infinispanRDD.filter { case (_, v) => v.startsWith("a") }
+      filteredRDD.values.collect().forall(_.startsWith("a")) shouldBe true
 
-      //      // Collect and Sort
-      //      val arrayOfTuple = infinispanRDD.collect().sorted
-      //      assertEquals(numEntries, arrayOfTuple.length)
-      //      assertEquals((1, "val1"), arrayOfTuple.head)
-      //      assertEquals((numEntries, s"val$numEntries"), arrayOfTuple(numEntries - 1))
-      //
-      //      // Max/Min
-      //      val maxEntry = infinispanRDD.max()
-      //      val minEntry = infinispanRDD.min()
-      //      assertEquals((1, "val1"), minEntry)
-      //      assertEquals((numEntries, s"val$numEntries"), maxEntry)
-      //
-      //      // RDD combination operations
-      //      val data = Array(1, 2, 3, 4, 5)
-      //      val memoryRDD = sc.parallelize(data)
-      //
-      //      val cartesianRDD = memoryRDD.cartesian(infinispanRDD)
-      //      assertEquals(numEntries * data.length, cartesianRDD.count())
-      //
-      //      val otherRDD = sc.makeRDD((1 to 5).map(Integer.valueOf).map(e => e -> s"val$e").toSeq)
-      //      val subtractedRDD = infinispanRDD.subtract(otherRDD, numPartitions = 2)
-      //      assertEquals(numEntries - otherRDD.count(), subtractedRDD.count())
-      //
-      //      // Map Reduce
-      //      val sum = infinispanRDD.map { case (key, value) => key }.reduce(_ + _)
-      //      assertEquals((numEntries + 1) * numEntries / 2, sum)
+      // Collect and Sort
+      val arrayOfTuple = infinispanRDD.collect().sorted
+      arrayOfTuple.length shouldBe getNumEntries
+      arrayOfTuple.head shouldBe(1, getRemoteCache.get(1))
+
+      // Max/Min
+      val maxEntry = infinispanRDD.max()
+      val minEntry = infinispanRDD.min()
+      minEntry shouldBe(1, getRemoteCache get 1)
+      maxEntry shouldBe(getNumEntries, getRemoteCache get getNumEntries)
+
+      // RDD combination operations
+      val data = Array(1, 2, 3, 4, 5)
+      val aRDD = sc.parallelize(data)
+
+      val cartesianRDD = aRDD.cartesian(infinispanRDD)
+      cartesianRDD.count shouldBe getNumEntries * data.length
+
+      val first5 = (1 to 5).map(i => (i, getRemoteCache.get(i)))
+      val otherRDD = sc.makeRDD(first5)
+      val subtractedRDD = infinispanRDD.subtract(otherRDD, numPartitions = 2)
+      subtractedRDD.count shouldBe (getNumEntries - otherRDD.count)
+
+      // Word count map reduce
+      val resultRDD = infinispanRDD.map { case (k, v) => v }.flatMap(_.split(" ")).map((_, 1)).reduceByKey(_ + _)
+      val firstWordCount = resultRDD.first()
+      val count = infinispanRDD.values.flatMap(_.split(" ")).countByValue().get(firstWordCount._1).get
+      count shouldBe firstWordCount._2
 
    }
-
 }

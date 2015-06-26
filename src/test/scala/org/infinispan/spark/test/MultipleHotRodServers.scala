@@ -1,154 +1,62 @@
 package org.infinispan.spark.test
 
+import org.infinispan.client.hotrod.RemoteCacheManager
+import org.infinispan.client.hotrod.test.HotRodClientTestingUtil
 import org.infinispan.client.hotrod.test.HotRodClientTestingUtil._
 import org.infinispan.configuration.cache.ConfigurationBuilder
 import org.infinispan.lifecycle.ComponentStatus
 import org.infinispan.server.hotrod.HotRodServer
+import org.infinispan.test.TestingUtil
 import org.infinispan.test.TestingUtil._
 import org.infinispan.test.fwk.{TestCacheManagerFactory, TransportFlags}
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
+import scala.collection.mutable.ListBuffer
 
-trait MultipleHotRodServers extends BeforeAndAfterAll with RemoteTest {
+
+trait
+MultipleHotRodServers extends BeforeAndAfterAll with RemoteTest {
    this: Suite =>
 
    protected def numServers: Int
 
    protected def getConfigurationBuilder: ConfigurationBuilder
 
-   protected val servers: List[HotRodServer]
+   protected val servers: ListBuffer[HotRodServer] = ListBuffer()
+
+   protected val remoteCacheManagers: ListBuffer[RemoteCacheManager] = ListBuffer()
 
    override protected def beforeAll(): Unit = {
-      val servers = (0 to numServers).map { _ =>
+      val hotRodServers = (1 to numServers).map { _ =>
          val clusteredCacheManager = TestCacheManagerFactory.createClusteredCacheManager(getConfigurationBuilder, new TransportFlags)
          startHotRodServer(clusteredCacheManager)
       }
-//      blockUntilViewReceived(servers.head.getCacheManager.getCache, numServers)
-//      servers.foreach(s => blockUntilCacheStatusAchieved(s.getCacheManager.getCache, ComponentStatus.RUNNING, 1000L))
+      val cache = hotRodServers.head.getCacheManager.getCache()
+      blockUntilViewReceived(cache, numServers)
+      hotRodServers.foreach(s => blockUntilCacheStatusAchieved(s.getCacheManager.getCache(), ComponentStatus.RUNNING, 1000L))
+      val rcms = hotRodServers.map { s =>
+         val clientBuilder = new org.infinispan.client.hotrod.configuration.ConfigurationBuilder()
+         clientBuilder.addServer().host("localhost").port(s.getPort).pingOnStartup(false)
+         new RemoteCacheManager(clientBuilder.build());
+      }
+      servers ++= hotRodServers
+      remoteCacheManagers ++= rcms
+
       super.beforeAll()
    }
 
-
    override protected def afterAll(): Unit = {
-
+      HotRodClientTestingUtil.killServers(servers: _*)
+      TestingUtil.killCacheManagers(servers.map(_.getCacheManager): _*)
       super.afterAll()
    }
 
+   protected def getRemoteCacheManagers: List[RemoteCacheManager] = remoteCacheManagers.toList
 
-   /**
-    *
-    *
-   protected HotRodServer addHotRodServer(ConfigurationBuilder builder) {
-      EmbeddedCacheManager cm = this.addClusterEnabledCacheManager(builder);
-      HotRodServer server = HotRodClientTestingUtil.startHotRodServer(cm);
-      this.servers.add(server);
-      return server;
-   }
+   protected def pickCacheManager: RemoteCacheManager = remoteCacheManagers.head
 
-    *
-    *
-    * protected List<HotRodServer> servers = new ArrayList();
-   protected List<RemoteCacheManager> clients = new ArrayList();
+   protected def getServers: List[HotRodServer] = servers.toList
 
-
-   protected void createHotRodServers(int num, ConfigurationBuilder defaultBuilder) {
-      int i;
-      for(i = 0; i < num; ++i) {
-         this.addHotRodServer(defaultBuilder);
-      }
-
-      for(i = 0; i < num; ++i) {
-         assert this.manager(i).getCache() != null;
-      }
-
-      TestingUtil.blockUntilViewReceived(this.manager(0).getCache(), num);
-
-      for(i = 0; i < num; ++i) {
-         TestingUtil.blockUntilCacheStatusAchieved(this.manager(i).getCache(), ComponentStatus.RUNNING, 10000L);
-      }
-
-      for(i = 0; i < num; ++i) {
-         this.clients.add(this.createClient(i));
-      }
-
-   }
-
-   protected RemoteCacheManager createClient(int i) {
-      return new InternalRemoteCacheManager(this.createHotRodClientConfigurationBuilder(this.server(i).getPort()).build());
-   }
-
-   protected org.infinispan.client.hotrod.configuration.ConfigurationBuilder createHotRodClientConfigurationBuilder(int serverPort) {
-      org.infinispan.client.hotrod.configuration.ConfigurationBuilder clientBuilder = new org.infinispan.client.hotrod.configuration.ConfigurationBuilder();
-      clientBuilder.addServer().host("localhost").port(serverPort).maxRetries(this.maxRetries()).pingOnStartup(false);
-      return clientBuilder;
-   }
-
-   protected int maxRetries() {
-      return 0;
-   }
-
-   @AfterMethod(
-      alwaysRun = true
-   )
-   protected void clearContent() throws Throwable {
-   }
-
-   @AfterClass(
-      alwaysRun = true
-   )
-   protected void destroy() {
-      try {
-         Iterator var1 = this.servers.iterator();
-
-         while(var1.hasNext()) {
-            HotRodServer server = (HotRodServer)var1.next();
-            HotRodClientTestingUtil.killServers(new HotRodServer[]{server});
-         }
-      } finally {
-         super.destroy();
-      }
-
-   }
-
-   protected HotRodServer addHotRodServer(ConfigurationBuilder builder) {
-      EmbeddedCacheManager cm = this.addClusterEnabledCacheManager(builder);
-      HotRodServer server = HotRodClientTestingUtil.startHotRodServer(cm);
-      this.servers.add(server);
-      return server;
-   }
-
-   protected HotRodServer addHotRodServer(ConfigurationBuilder builder, int port) {
-      EmbeddedCacheManager cm = this.addClusterEnabledCacheManager(builder);
-      HotRodServer server = HotRodTestingUtil.startHotRodServer(cm, port, new HotRodServerConfigurationBuilder());
-      this.servers.add(server);
-      return server;
-   }
-
-   protected HotRodServer server(int i) {
-      return (HotRodServer)this.servers.get(i);
-   }
-
-   protected void killServer(int i) {
-      HotRodServer server = (HotRodServer)this.servers.get(i);
-      HotRodClientTestingUtil.killServers(new HotRodServer[]{server});
-      this.servers.remove(i);
-      TestingUtil.killCacheManagers(new EmbeddedCacheManager[]{(EmbeddedCacheManager)this.cacheManagers.get(i)});
-      this.cacheManagers.remove(i);
-   }
-
-   protected RemoteCacheManager client(int i) {
-      return (RemoteCacheManager)this.clients.get(i);
-   }
-
-   protected void defineInAll(String cacheName, ConfigurationBuilder builder) {
-      Iterator var3 = this.servers.iterator();
-
-      while(var3.hasNext()) {
-         HotRodServer server = (HotRodServer)var3.next();
-         server.getCacheManager().defineConfiguration(cacheName, builder.build());
-      }
-
-   }
-    */
+   protected def pickServer: HotRodServer = servers.head
 
 }

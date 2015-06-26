@@ -6,7 +6,6 @@ import org.apache.spark.Partition
 
 /**
  * @author gustavonalle
- * @since 8.0
  */
 class Location(val address: SocketAddress) extends Serializable
 

@@ -14,11 +14,14 @@ libraryDependencies ++= Seq(
    "org.infinispan" % "infinispan-server-hotrod" % "8.0.0-SNAPSHOT" % "test" classifier "tests",
    "org.infinispan" % "infinispan-server-hotrod" % "8.0.0-SNAPSHOT" % "test",
    "org.infinispan" % "infinispan-core" % "8.0.0-SNAPSHOT" % "test" classifier "tests",
-   "org.scalatest" %% "scalatest" % "2.2.5" % "test",
-   "org.testng" % "testng" % "6.9.4" % "test",
-   "org.slf4j" % "slf4j-api" % "1.7.10" % "provided"
+   "org.scalatest" %% "scalatest" % "2.2.5" % "test"
 )
 
 resolvers += "Local Maven" at Path.userHome.asFile.toURI.toURL + ".m2/repository"
 
 parallelExecution in Test := false
+
+fork := true
+
+//javaOptions in Test := Seq("-XX:+UnlockCommercialFeatures","-XX:+FlightRecorder","-XX:StartFlightRecording=duration=60s,filename=myrecording.jfr,settings=profile")
+

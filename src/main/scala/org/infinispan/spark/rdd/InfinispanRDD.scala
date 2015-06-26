@@ -11,8 +11,6 @@ import scala.collection.JavaConversions._
 
 /**
  * @author gustavonalle
- * @since 8.0
- *
  */
 class InfinispanRDD[K, V](@transient val sc: SparkContext,
                           @transient val splitter: Splitter = new PerServerSplitter)
@@ -32,6 +30,10 @@ class InfinispanRDD[K, V](@transient val sc: SparkContext,
       val segmentFilter = infinispanPartition.segments.map(setAsJavaSet).orNull
       val batch = infinispanPartition.batch
       val closeableIterator = cache.retrieveEntries(null, segmentFilter, batch)
+      context addTaskCompletionListener (t => {
+         closeableIterator.close()
+         remoteCacheManager.stop()
+      })
       new InfinispanIterator(closeableIterator, context)
    }
 

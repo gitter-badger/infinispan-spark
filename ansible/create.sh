@@ -1,6 +1,7 @@
 #!/bin/bash
-set -e
-set -x 
+set -x
+
+export ANSIBLE_HOST_KEY_CHECKING=False
 
 # Number of nodes in the cluster (default 1)
 N=${1:-1}
@@ -15,17 +16,24 @@ METADATA_SLAVE="--meta ansible_host_groups=spark,slave,infinispan"
 START=1
 for (( c=$START; c<=$N; c++))
 do
+  echo "Provisioning server $c"
   [[ $c = 1 ]] && METADATA="$METADATA_MASTER" || METADATA="$METADATA_SLAVE"
   SERVER=$(nova boot --flavor $FLAVOUR --image $IMAGE --security-groups $SECURITY_GROUPS --key-name $KEY_NAME $METADATA node$c | grep " id " | awk '{print $4}') 
   STATUS=''
   while [[ "$STATUS" != "ACTIVE" ]];
   do
     STATUS=$(nova show $SERVER | grep status | awk '{print $4'})
+    echo "Waiting for server to be available (current status: $STATUS)"
     sleep 5 
   done
+  echo "Associating floating IP to server $SERVER"
   IP=$(nova floating-ip-create os1_public | grep os1_public | awk '{ print $2 }')
   nova floating-ip-associate $SERVER $IP
 done
 
+echo "Provisioning done."
 
+sleep 10
+
+echo "Running Plyabook"
 ansible-playbook --user fedora -i inventory.py server.yaml -f $N
