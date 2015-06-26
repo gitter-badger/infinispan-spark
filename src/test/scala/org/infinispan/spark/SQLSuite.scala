@@ -3,7 +3,6 @@ package org.infinispan.spark
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
 import org.infinispan.spark.domain.Runner
-import org.infinispan.spark.rdd.InfinispanRDD
 import org.infinispan.spark.test.{RunnersCache, SingleHotRodServer, Spark}
 import org.scalatest.{FunSuite, Matchers}
 
@@ -39,7 +38,7 @@ class SQLSuite extends FunSuite with RunnersCache with Spark with SingleHotRodSe
    }
 
    private def withSqlContext(f: (SQLContext, RDD[Runner]) => Any) = {
-      val runnersRDD = new InfinispanRDD[Integer, Runner](sc).values
+      val runnersRDD = createInfinispanRDD[Integer, Runner].values
       val sqlContext = new SQLContext(sc)
       val dataFrame = sqlContext.createDataFrame(runnersRDD)
       dataFrame.registerTempTable("runners")

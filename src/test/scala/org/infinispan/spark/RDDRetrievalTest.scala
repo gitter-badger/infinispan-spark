@@ -1,6 +1,5 @@
 package org.infinispan.spark
 
-import org.infinispan.spark.rdd.InfinispanRDD
 import org.infinispan.spark.test.{Spark, WordCache}
 import org.scalatest.{FunSuite, Matchers}
 
@@ -8,7 +7,7 @@ abstract class RDDRetrievalTest extends FunSuite with Matchers {
    self: WordCache with Spark =>
 
    test("RDD Operators") {
-      val infinispanRDD = new InfinispanRDD[Int, String](sc)
+      val infinispanRDD = createInfinispanRDD[Int, String]
 
       // Count
       infinispanRDD.count() shouldBe getNumEntries

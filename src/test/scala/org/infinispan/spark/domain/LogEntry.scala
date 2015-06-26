@@ -36,8 +36,6 @@ object EntryGenerator {
    val browser = Set("Firefox", "Chrome", "MSIE")
    val domainNames = Set("no-ip.org", "dnf.it", "google.com", "localhost")
 
-   private def circularIterator[T](s: Set[T]) = Iterator.continually(s).flatten
-
    def generate(numEntries: Int, errorCondition: LogEntry => Boolean, startDate: LocalDate, endDate: LocalDate) = {
       val userAgentsIterator = circularIterator(browser)
       val domainNamesIterator = circularIterator(domainNames)
@@ -53,5 +51,7 @@ object EntryGenerator {
          entry
       }.toList
    }
+
+   private def circularIterator[T](s: Set[T]) = Iterator.continually(s).flatten
 
 }

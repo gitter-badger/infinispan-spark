@@ -14,8 +14,8 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
 trait SingleHotRodServer extends BeforeAndAfterAll with RemoteTest {
    this: Suite =>
 
-   private var remoteCacheManager: RemoteCacheManager = _
    protected var hotRotServer: HotRodServer = _
+   private var remoteCacheManager: RemoteCacheManager = _
    private var cacheManager: EmbeddedCacheManager = _
 
    override protected def beforeAll(): Unit = {
@@ -24,6 +24,12 @@ trait SingleHotRodServer extends BeforeAndAfterAll with RemoteTest {
       this.cacheManager = TestCacheManagerFactory.createCacheManager(hotRodCacheConfiguration())
       super.beforeAll()
    }
+
+   protected def createRemoteCacheManager = new RemoteCacheManager(new ConfigurationBuilder().addServer().host("127.0.0.1").port(hotRotServer.getPort).build)
+
+   protected def createHotRodServer = HotRodClientTestingUtil.startHotRodServer(createCacheManager)
+
+   protected def createCacheManager = TestCacheManagerFactory.createCacheManager(hotRodCacheConfiguration())
 
    override protected def afterAll(): Unit = {
       killRemoteCacheManager(remoteCacheManager)
@@ -39,12 +45,6 @@ trait SingleHotRodServer extends BeforeAndAfterAll with RemoteTest {
    protected def getRemoteCacheManagers: List[RemoteCacheManager] = List(remoteCacheManager)
 
    protected def getServers: List[HotRodServer] = List(hotRotServer)
-
-   protected def createRemoteCacheManager = new RemoteCacheManager(new ConfigurationBuilder().addServer().host("127.0.0.1").port(hotRotServer.getPort).build)
-
-   protected def createCacheManager = TestCacheManagerFactory.createCacheManager(hotRodCacheConfiguration())
-
-   protected def createHotRodServer = HotRodClientTestingUtil.startHotRodServer(createCacheManager)
 }
 
 

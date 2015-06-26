@@ -1,6 +1,7 @@
 package org.infinispan.spark.rdd
 
 import java.net.SocketAddress
+import java.util.Properties
 
 import org.apache.spark.Partition
 
@@ -9,7 +10,7 @@ import org.apache.spark.Partition
  */
 trait Splitter {
 
-   def split(segmentsByServer: Map[SocketAddress, Set[Integer]], cacheName: String, batch: Int): Array[Partition]
+   def split(segmentsByServer: Map[SocketAddress, Set[Integer]], properties: Properties): Array[Partition]
 }
 
 /**
@@ -17,10 +18,10 @@ trait Splitter {
  */
 class PerServerSplitter extends Splitter {
 
-   override def split(segmentsByServer: Map[SocketAddress, Set[Integer]], cacheName: String, batch: Int): Array[Partition] = {
+   override def split(segmentsByServer: Map[SocketAddress, Set[Integer]], properties: Properties): Array[Partition] = {
       if (segmentsByServer.isEmpty) throw new IllegalArgumentException("No servers found to partition")
       if (segmentsByServer.keys.size == 1 && segmentsByServer.values.flatten.isEmpty) {
-         Array(new SingleServerPartition(segmentsByServer.keySet.head, cacheName, batch))
+         Array(new SingleServerPartition(segmentsByServer.keySet.head, properties))
       } else {
          val numServers = segmentsByServer.keySet.size
          val numSegments = segmentsByServer.values.flatten.max + 1
@@ -37,7 +38,7 @@ class PerServerSplitter extends Splitter {
                split ++= notTaken.take(segmentsPerServer - split.size)
                taken ++= split
                available ++= notTaken
-               new InfinispanPartition(index, Location(server), Some(split.toSet), cacheName, batch)
+               new InfinispanPartition(index, Location(server), Some(split.toSet), properties)
          }.toArray
       }
    }

@@ -12,5 +12,4 @@ trait RemoteTest {
    protected def getServers: List[HotRodServer]
 
    protected def pickServer: HotRodServer
-
 }
