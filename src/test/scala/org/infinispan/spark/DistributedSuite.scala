@@ -14,6 +14,7 @@ class DistributedSuite extends RDDRetrievalTest with WordCache with Spark with M
    override protected def getConfigurationBuilder = {
       val builder = getDefaultClusteredCacheConfig(CacheMode.REPL_SYNC, false)
       builder.dataContainer().keyEquivalence(new AnyServerEquivalence).valueEquivalence(new AnyServerEquivalence)
+      builder.clustering().hash().numSegments(60).numOwners(2)
       builder
    }
 }

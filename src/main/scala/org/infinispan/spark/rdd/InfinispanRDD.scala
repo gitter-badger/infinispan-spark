@@ -22,7 +22,7 @@ class InfinispanRDD[K, V](@transient val sc: SparkContext,
       val infinispanPartition = split.asInstanceOf[InfinispanPartition]
       val config = infinispanPartition.properties
       val cacheName = config.getProperty(InfinispanRDD.CacheName)
-      val batch = Option(config.getProperty(InfinispanRDD.BatchSize)).map(_.toInt).getOrElse(InfinispanRDD.DefaultBatchSize)
+      val batch = config.read[Integer](InfinispanRDD.BatchSize)(default = InfinispanRDD.DefaultBatchSize)
       val address = infinispanPartition.location.address.asInstanceOf[InetSocketAddress]
       val host = address.getHostString
       val port = address.getPort
@@ -44,7 +44,7 @@ class InfinispanRDD[K, V](@transient val sc: SparkContext,
    override protected def getPartitions: Array[Partition] = {
       val remoteCacheManager = new RemoteCacheManager(new ConfigurationBuilder().withProperties(configuration).pingOnStartup(true).build())
       val optCacheName = Option(configuration.getProperty(InfinispanRDD.CacheName))
-      val cache = optCacheName.map(name => remoteCacheManager.getCache(name)).getOrElse(remoteCacheManager.getCache)
+      val cache = optCacheName.map(remoteCacheManager.getCache).getOrElse(remoteCacheManager.getCache)
       val segmentsByServer = cache.getSegmentsByServer
       splitter.split(segmentsByServer.toMap.mapValues(_.toSet), configuration)
    }
@@ -52,7 +52,10 @@ class InfinispanRDD[K, V](@transient val sc: SparkContext,
 
 object InfinispanRDD {
    val DefaultBatchSize = 10000
+   val DefaultPartitionsPerServer = 2
 
    val CacheName = "infinispan.rdd.cacheName"
    val BatchSize = "infinispan.rdd.batch_size"
+   val PartitionsPerServer = "infinispan.rdd.number_server_partitions"
+   val FilterFactory = "infinispan.rdd.filter_factory"
 }

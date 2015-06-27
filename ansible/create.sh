@@ -7,7 +7,7 @@ export ANSIBLE_HOST_KEY_CHECKING=False
 N=${1:-1}
 
 FLAVOUR="m1.large"
-IMAGE="f2df087c-4e54-4047-98c0-8e03dbf6412b"  
+IMAGE="f2df087c-4e54-4047-98c0-8e03dbf6412b"
 KEY_NAME="gustavo"
 SECURITY_GROUPS="default,spark,infinispan_server"
 METADATA_MASTER="--meta ansible_host_groups=spark,master,infinispan"

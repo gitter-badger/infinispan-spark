@@ -23,5 +23,7 @@ parallelExecution in Test := false
 
 fork := true
 
+publishArtifact in Test := true
+
 //javaOptions in Test := Seq("-XX:+UnlockCommercialFeatures","-XX:+FlightRecorder","-XX:StartFlightRecording=duration=60s,filename=myrecording.jfr,settings=profile")
 

@@ -5,6 +5,9 @@ import java.util.Properties
 
 import org.apache.spark.Partition
 
+import scala.collection.mutable
+
+
 /**
  * @author gustavonalle
  */
@@ -14,33 +17,47 @@ trait Splitter {
 }
 
 /**
- * Splits in one partition per server, trying to distribute equally the segments among each server
+ * Create one or more partition per server so that:
+ * - Each partition will only contain segments owned by the associated server
+ * - A segment is unique across partitions
+ * - One or more partition is associated with each server server
  */
 class PerServerSplitter extends Splitter {
 
-   override def split(segmentsByServer: Map[SocketAddress, Set[Integer]], properties: Properties): Array[Partition] = {
+   override def split(segmentsByServer: Map[SocketAddress, Set[Integer]], properties: Properties) = {
       if (segmentsByServer.isEmpty) throw new IllegalArgumentException("No servers found to partition")
       if (segmentsByServer.keys.size == 1 && segmentsByServer.values.flatten.isEmpty) {
          Array(new SingleServerPartition(segmentsByServer.keySet.head, properties))
       } else {
-         val numServers = segmentsByServer.keySet.size
-         val numSegments = segmentsByServer.values.flatten.max + 1
+         val segmentsByServerSeq = segmentsByServer.toStream.sortBy { case (_, v) => v.size }
+         val segments = segmentsByServerSeq.flatMap { case (address, segs) => segs.toSeq }.distinct
+
+         val numServers = segmentsByServerSeq.size
+         val numSegments = segments.size
          val segmentsPerServer = Math.ceil(numSegments.toFloat / numServers.toFloat).toInt
 
-         val taken = collection.mutable.Set[Integer]()
-         val available = collection.mutable.Set[Integer]()
-         segmentsByServer.zipWithIndex.map {
-            case ((server, segments), index) =>
-               val split = collection.mutable.Set[Integer]()
-               val leftFromPrevious = segments.intersect(available).diff(taken).take(segmentsPerServer)
-               val notTaken = segments.diff(taken)
-               split ++= leftFromPrevious
-               split ++= notTaken.take(segmentsPerServer - split.size)
-               taken ++= split
-               available ++= notTaken
-               new InfinispanPartition(index, Location(server), Some(split.toSet), properties)
+         val q = mutable.Queue(segments: _*)
+         val segmentsByServerIterator = Iterator.continually(segmentsByServerSeq).flatten
+         val result = new mutable.HashMap[SocketAddress, collection.mutable.Set[Integer]] with mutable.MultiMap[SocketAddress, Integer]
+         while (q.nonEmpty) {
+            val (server, segments) = segmentsByServerIterator.next()
+            val split = List.fill(segmentsPerServer) {
+               q.dequeueFirst(segments.contains)
+            }.flatten
+            if (split.nonEmpty) {
+               split.foreach {
+                  result.addBinding(server, _)
+               }
+            }
+         }
+
+         val pps = properties.read[Int](InfinispanRDD.PartitionsPerServer)(default = InfinispanRDD.DefaultPartitionsPerServer)
+         result.toStream.flatMap { case (a, b) => cut(b.toSeq, pps).map((a, _)) }.zipWithIndex.map { case ((server, segs), idx) =>
+            new InfinispanPartition(idx, Location(server), Some(segs), properties)
          }.toArray
       }
    }
+
+   private def cut[A](l: Seq[A], parts: Int) = (0 until parts).map { i => l.drop(i).sliding(1, parts).flatten.toSet }.filter(_.nonEmpty)
 
 }
