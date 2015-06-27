@@ -26,7 +26,10 @@
     - name: start master
       shell: /usr/local/spark/sbin/start-master.sh --webui-port 9080
       environment:
-        SPARK_MASTER_IP: "{{ ansible_eth0.ipv4.address }}" 
+        SPARK_MASTER_IP: "{{ ansible_eth0.ipv4.address }}"
+
+    - name: start slave
+      shell: "/usr/local/spark/sbin/start-slave.sh spark://{{ ansible_eth0.ipv4.address }}:7077 --webui-port 9081"
      
     - name: start docker service
       service: name=docker state=started
