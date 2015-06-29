@@ -44,7 +44,7 @@ class InfinispanRDD[K, V](@transient val sc: SparkContext,
    override protected def getPartitions: Array[Partition] = {
       val remoteCacheManager = new RemoteCacheManager(new ConfigurationBuilder().withProperties(configuration).pingOnStartup(true).build())
       val optCacheName = Option(configuration.getProperty(InfinispanRDD.CacheName))
-      val cache = optCacheName.map(remoteCacheManager.getCache).getOrElse(remoteCacheManager.getCache)
+      val cache = optCacheName.map(remoteCacheManager.getCache(_)).getOrElse(remoteCacheManager.getCache())
       val segmentsByServer = cache.getSegmentsByServer
       splitter.split(segmentsByServer.toMap.mapValues(_.toSet), configuration)
    }

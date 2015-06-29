@@ -1,9 +1,10 @@
-package org.infinispan.spark.rdd
+package org.infinispan.spark
 
 import java.net.{InetSocketAddress, SocketAddress}
 import java.util.Properties
 
 import org.apache.spark.Partition
+import org.infinispan.spark.rdd.{InfinispanPartition, InfinispanRDD, PerServerSplitter}
 import org.scalatest.{FunSuite, Matchers}
 
 

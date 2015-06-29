@@ -52,7 +52,7 @@ class PerServerSplitter extends Splitter {
          }
 
          val pps = properties.read[Int](InfinispanRDD.PartitionsPerServer)(default = InfinispanRDD.DefaultPartitionsPerServer)
-         result.toStream.flatMap { case (a, b) => cut(b.toSeq, pps).map((a, _)) }.zipWithIndex.map { case ((server, segs), idx) =>
+         result.toStream.flatMap { case (a, b) => cut(b.toSeq, pps).map((a, _)) }.view.zipWithIndex.map { case ((server, segs), idx) =>
             new InfinispanPartition(idx, Location(server), Some(segs), properties)
          }.toArray
       }
