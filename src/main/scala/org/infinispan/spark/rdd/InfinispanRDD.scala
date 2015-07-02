@@ -45,7 +45,7 @@ class InfinispanRDD[K, V](@transient val sc: SparkContext,
       val remoteCacheManager = new RemoteCacheManager(new ConfigurationBuilder().withProperties(configuration).pingOnStartup(true).build())
       val optCacheName = Option(configuration.getProperty(InfinispanRDD.CacheName))
       val cache = optCacheName.map(remoteCacheManager.getCache(_)).getOrElse(remoteCacheManager.getCache())
-      val segmentsByServer = cache.getSegmentsByServer
+      val segmentsByServer = cache.getCacheTopologyInfo.getSegmentsPerServer
       splitter.split(segmentsByServer.toMap.mapValues(_.toSet), configuration)
    }
 }

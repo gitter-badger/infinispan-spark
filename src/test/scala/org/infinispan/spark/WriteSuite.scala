@@ -29,14 +29,14 @@ class WriteSuite extends FunSuite with Spark with MultipleHotRodServers with Mat
 
       val rdd = sc.parallelize(entities).zipWithIndex().map { case (a, b) => (b, a) }
 
-      pickCacheManager.getConfiguration.servers().iterator().next()
-
       val props = new Properties()
       props.put(ConfigurationProperties.SERVER_LIST, s"localhost:${pickServer.getPort}")
 
-      rdd.writeToInfinispan(props)
-
       val cache = cm.getCache[Long, Runner]()
+
+      cache.size shouldBe 0
+
+      rdd.writeToInfinispan(props)
 
       cache.size() shouldBe 1000
       cache.get(350L).name shouldBe "name350"
