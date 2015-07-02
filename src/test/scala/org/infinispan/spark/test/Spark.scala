@@ -11,7 +11,7 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
 trait Spark extends BeforeAndAfterAll {
    this: Suite with RemoteTest =>
 
-   private lazy val config: SparkConf = new SparkConf().setMaster("local[4]").setAppName(this.getClass.getName)
+   private lazy val config: SparkConf = new SparkConf().setMaster("local[8]").setAppName(this.getClass.getName)
    protected var sc: SparkContext = _
 
    def createInfinispanRDD[K, V] = {

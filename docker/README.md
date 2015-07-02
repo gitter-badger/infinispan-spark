@@ -1,4 +1,4 @@
-# Docker images to test Infinispan/Spark integration
+## Docker images to test Infinispan/Spark integration
 
 ### Launching:
 

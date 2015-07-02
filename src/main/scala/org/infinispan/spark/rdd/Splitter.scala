@@ -4,6 +4,7 @@ import java.net.SocketAddress
 import java.util.Properties
 
 import org.apache.spark.Partition
+import org.infinispan.spark._
 
 import scala.collection.mutable
 

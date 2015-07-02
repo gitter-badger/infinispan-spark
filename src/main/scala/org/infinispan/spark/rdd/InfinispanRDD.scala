@@ -5,8 +5,9 @@ import java.util.Properties
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{Partition, SparkContext, TaskContext}
-import org.infinispan.client.hotrod.RemoteCacheManager
+import org.infinispan.client.hotrod.{Flag, RemoteCacheManager}
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder
+import org.infinispan.spark._
 
 import scala.collection.JavaConversions._
 

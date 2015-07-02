@@ -6,7 +6,6 @@ import org.infinispan.client.hotrod.impl.ConfigurationProperties
 import org.infinispan.commons.equivalence.AnyServerEquivalence
 import org.infinispan.configuration.cache.{CacheMode, ConfigurationBuilder}
 import org.infinispan.spark.domain.Runner
-import org.infinispan.spark.rdd._
 import org.infinispan.spark.test.{MultipleHotRodServers, Spark}
 import org.infinispan.test.AbstractCacheTest._
 import org.scalatest.{FunSuite, Matchers}
