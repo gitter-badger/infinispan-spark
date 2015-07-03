@@ -1,5 +1,6 @@
 package org.infinispan.spark.stream
 
+import java.nio._
 import java.util.Properties
 
 import org.apache.spark.storage.StorageLevel
@@ -10,7 +11,7 @@ import org.infinispan.client.hotrod.RemoteCacheManager
 import org.infinispan.client.hotrod.annotation.{ClientCacheEntryCreated, ClientCacheEntryModified, ClientCacheEntryRemoved, ClientListener}
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder
 import org.infinispan.client.hotrod.event.{ClientCacheEntryCustomEvent, ClientEvent}
-import org.infinispan.commons.util.KeyValueWithPrevious
+import org.infinispan.commons.io.UnsignedNumeric
 import org.infinispan.spark.rdd.InfinispanRDD
 
 /**
@@ -33,17 +34,37 @@ private class EventsReceiver[K, V](storageLevel: StorageLevel, configuration: Pr
 
    override def onStop(): Unit = remoteCache.removeClientListener(listener)
 
-   @ClientListener(converterFactoryName = "key-value-with-previous-converter-factory")
+   @ClientListener(converterFactoryName = "___eager-key-value-version-converter", useRawData = true)
    private class EventListener {
+
+      @ClientCacheEntryRemoved
+      def onRemove(event: ClientCacheEntryCustomEvent[Array[Byte]]) {
+         val marshaller = remoteCache.getRemoteCacheManager.getMarshaller
+         val eventData = event.getEventData
+         val rawData = ByteBuffer.wrap(eventData)
+         val rawKey = readElement(rawData)
+         val key: K = marshaller.objectFromByteBuffer(rawKey).asInstanceOf[K]
+         store((key, null.asInstanceOf[V], event.getType))
+      }
 
       @ClientCacheEntryCreated
       @ClientCacheEntryModified
-      @ClientCacheEntryRemoved
-      def onEvent(event: ClientCacheEntryCustomEvent[KeyValueWithPrevious[K, V]]) = {
+      def onAddModify(event: ClientCacheEntryCustomEvent[Array[Byte]]) = {
+         val marshaller = remoteCache.getRemoteCacheManager.getMarshaller
          val eventData = event.getEventData
-         val key: K = eventData.getKey
-         val value: V = eventData.getValue
+         val rawData = ByteBuffer.wrap(eventData)
+         val rawKey = readElement(rawData)
+         val rawValue = readElement(rawData)
+         val key: K = marshaller.objectFromByteBuffer(rawKey).asInstanceOf[K]
+         val value: V = marshaller.objectFromByteBuffer(rawValue).asInstanceOf[V]
          store((key, value, event.getType))
+      }
+
+      private def readElement(in: ByteBuffer): Array[Byte] = {
+         val length = UnsignedNumeric.readUnsignedInt(in)
+         val element = new Array[Byte](length)
+         in.get(element)
+         element
       }
    }
 

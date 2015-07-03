@@ -15,7 +15,9 @@ libraryDependencies ++= Seq(
    "org.infinispan" % "infinispan-server-hotrod" % "8.0.0-SNAPSHOT" % "test" classifier "tests",
    "org.infinispan" % "infinispan-server-hotrod" % "8.0.0-SNAPSHOT" % "test",
    "org.infinispan" % "infinispan-core" % "8.0.0-SNAPSHOT" % "test" classifier "tests",
-   "org.scalatest" %% "scalatest" % "2.2.5" % "test"
+   "org.scalatest" %% "scalatest" % "2.2.5" % "test",
+   "net.jcip" % "jcip-annotations" % "1.0"
+
 )
 
 resolvers += "Local Maven" at Path.userHome.asFile.toURI.toURL + ".m2/repository"
