@@ -214,11 +214,11 @@ Output:
 
 ### Stream Infinispan Data
 
-The previous queries were run against all the data in the cache. Now were going to execute
+The previous queries were run against all the data in the cache. Now we're going to execute
 some sliding window queries, getting tweets per country in the last minute only. 
 For this we are going to create a DStream that will reflect the latest cache inserts. 
-Since Spark can only hold one streaming context per JVM, let's start another shell in another terminal.
-Close the current running shell, and start a fresh one:
+Since Spark can only hold one streaming context per JVM, let's start another one.
+Close the current running shell (CTRL+D), and start it again:
 
 ```
 ./run-shell.sh master-ip
@@ -300,7 +300,7 @@ Finally we print the results:
 
 
 ```scala
-total.foreachRDD{ (rdd, time) => println(s"--------- $time -------"); rdd.sortBy(_._2).collect().foreach(println) }
+lastMinuteDStream.foreachRDD{ (rdd, time) => println(s"--------- $time -------"); rdd.sortBy(_._2, ascending = false).collect().foreach(println) }
 
 ```
 
