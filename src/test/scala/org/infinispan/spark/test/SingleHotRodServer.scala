@@ -8,7 +8,7 @@ import org.infinispan.manager.EmbeddedCacheManager
 import org.infinispan.server.hotrod.HotRodServer
 import org.infinispan.server.hotrod.test.HotRodTestingUtil._
 import org.infinispan.test.TestingUtil
-import org.infinispan.test.fwk.TestCacheManagerFactory
+import org.infinispan.test.fwk.{TestResourceTracker, TestCacheManagerFactory}
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
 trait SingleHotRodServer extends BeforeAndAfterAll with RemoteTest {
@@ -19,6 +19,7 @@ trait SingleHotRodServer extends BeforeAndAfterAll with RemoteTest {
    private var cacheManager: EmbeddedCacheManager = _
 
    override protected def beforeAll(): Unit = {
+      TestResourceTracker.setThreadTestName(this.getClass.getCanonicalName)
       this.hotRotServer = createHotRodServer
       this.remoteCacheManager = createRemoteCacheManager
       this.cacheManager = TestCacheManagerFactory.createCacheManager(hotRodCacheConfiguration())

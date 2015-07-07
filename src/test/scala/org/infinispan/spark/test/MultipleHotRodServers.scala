@@ -8,14 +8,13 @@ import org.infinispan.lifecycle.ComponentStatus
 import org.infinispan.server.hotrod.HotRodServer
 import org.infinispan.test.TestingUtil
 import org.infinispan.test.TestingUtil._
-import org.infinispan.test.fwk.{TestCacheManagerFactory, TransportFlags}
+import org.infinispan.test.fwk.{TestCacheManagerFactory, TestResourceTracker, TransportFlags}
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
 import scala.collection.mutable.ListBuffer
 
 
-trait
-MultipleHotRodServers extends BeforeAndAfterAll with RemoteTest {
+trait MultipleHotRodServers extends BeforeAndAfterAll with RemoteTest {
    this: Suite =>
 
    protected def numServers: Int
@@ -27,6 +26,7 @@ MultipleHotRodServers extends BeforeAndAfterAll with RemoteTest {
    protected val remoteCacheManagers: ListBuffer[RemoteCacheManager] = ListBuffer()
 
    override protected def beforeAll(): Unit = {
+      TestResourceTracker.setThreadTestName(this.getClass.getCanonicalName)
       val hotRodServers = (1 to numServers).map { _ =>
          val clusteredCacheManager = TestCacheManagerFactory.createClusteredCacheManager(getConfigurationBuilder, new TransportFlags)
          startHotRodServer(clusteredCacheManager)

@@ -53,23 +53,20 @@
   sudo: true
 
   tasks:
-    - name: copy infinispan server
-      copy: src=/home/gfernandes/.m2/repository/org/infinispan/server/infinispan-server/8.0.0-SNAPSHOT/infinispan-server-8.0.0-SNAPSHOT-bin.zip dest=/usr/local/infinispan-server-8.0.0-SNAPSHOT-bin.zip
+    - name: get infinispan server
+      get_url: url='http://downloads.jboss.org/infinispan/8.0.0.Beta1/infinispan-server-8.0.0.Beta1-bin.zip' dest=/usr/local/infinispan-server-8.0.0.Beta1-bin.zip
 
     - name: extract infinispan 
-      unarchive: src='/usr/local/infinispan-server-8.0.0-SNAPSHOT-bin.zip' dest='/usr/local/' copy=no
+      unarchive: src='/usr/local/infinispan-server-8.0.0.Beta1-bin.zip' dest='/usr/local/' copy=no
     
     - name: symlink for infinispan
-      file: src=/usr/local/infinispan-server-8.0.0-SNAPSHOT/ dest=/usr/local/infinispan state=link
+      file: src=/usr/local/infinispan-server-8.0.0.Beta1/ dest=/usr/local/infinispan state=link
 
     - name: increase memory
       shell: "sed -i 's/-Xmx512/-Xmx4096/g' /usr/local/infinispan/bin/standalone.conf"     
 
-    - name: configure gossip
-      shell: sed -i '/MPING/c\<protocol type="TCPGOSSIP"><property name="initial_hosts">${gossip}</property></protocol>'  /usr/local/infinispan/standalone/configuration/clustered.xml
-
     - name: start infinispan
-      shell: nohup /usr/local/infinispan/bin/standalone.sh -c clustered.xml -Djboss.default.jgroups.stack=tcp -Dgossip={{ hostvars[groups['master'][0]]['ansible_eth0']['ipv4']['address']  }}[12001] -Djgroups.bind_addr={{ ansible_eth0.ipv4.address  }} -Djboss.bind.address={{ ansible_eth0.ipv4.address }} &
+      shell: nohup /usr/local/infinispan/bin/standalone.sh -c clustered.xml -Djboss.default.jgroups.stack=tcp-gossip -Djgroups.gossip.initial_hosts={{ hostvars[groups['master'][0]]['ansible_eth0']['ipv4']['address']  }}[12001] -Djgroups.bind_addr={{ ansible_eth0.ipv4.address  }} -Djboss.bind.address={{ ansible_eth0.ipv4.address }} &
 
 
 

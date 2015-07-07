@@ -10,8 +10,8 @@ ADD java_home.sh /etc/profile.d/java_home.sh
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD start-spark.sh /opt/spark/
 
-ADD infinispan-server-8.0.0-SNAPSHOT-bin.zip /
-RUN unzip /infinispan-server-8.0.0-SNAPSHOT-bin.zip -d /opt/ && rm /infinispan-server-8.0.0-SNAPSHOT-bin.zip && ln -s /opt/infinispan-server-8.0.0-SNAPSHOT /opt/infinispan-server
+ADD infinispan-server-8.0.0.Beta1-bin.zip /
+RUN unzip /infinispan-server-8.0.0.Beta1-bin.zip -d /opt/ && rm /infinispan-server-8.0.0.Beta1-bin.zip && ln -s /opt/infinispan-server-8.0.0.Beta1 /opt/infinispan-server
 RUN sed -i 's/-Xmx512/-Xmx4096/g' /opt/infinispan-server/bin/standalone.conf
 ADD start-infinispan.sh /opt/infinispan-server/bin/
 EXPOSE 8080 7077 9080 9081 57600 7600 8181 9990 11211 11222
