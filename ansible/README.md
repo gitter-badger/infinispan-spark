@@ -1,5 +1,23 @@
-Download and source the rc file from Openstack
+## Spark and Infinispan cluster on Openstack
 
-Install package 'dnf install python-novaclient'
+Download and source the rc file from Openstack:
 
-Run ./create.sh <num_servers> to provision a cluster
+```
+source openstack.rc
+```
+
+Install package novaclient using dnf/yum or your system's package manager:
+
+```
+dnf install python-novaclient'
+```
+
+Check the variable ```OS_NETWORK_NAME``` in the script file ```inventory.py``` to 
+match the Openstack installation
+
+
+To provision a cluster:
+
+```
+./create.sh <num_servers>
+```
