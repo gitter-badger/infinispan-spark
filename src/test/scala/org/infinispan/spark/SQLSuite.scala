@@ -3,12 +3,13 @@ package org.infinispan.spark
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
 import org.infinispan.spark.domain.Runner
-import org.infinispan.spark.test.{RunnersCache, SingleHotRodServer, Spark}
-import org.scalatest.{FunSuite, Matchers}
+import org.infinispan.spark.test.{RemoteTest, RunnersCache, Spark}
+import org.scalatest.{DoNotDiscover, FunSuite, Matchers}
 
-class SQLSuite extends FunSuite with RunnersCache with Spark with SingleHotRodServer with Matchers {
+@DoNotDiscover
+class SQLSuite extends FunSuite with RunnersCache with Spark with RemoteTest with Matchers {
 
-   override def getNumEntries: Int = 10000
+   override def getNumEntries: Int = 100
 
    test("SQL Group By") {
       withSqlContext { (sqlContext, runnersRDD) =>

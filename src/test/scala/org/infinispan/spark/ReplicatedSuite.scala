@@ -1,19 +1,14 @@
 package org.infinispan.spark
 
-import org.infinispan.commons.equivalence.AnyServerEquivalence
-import org.infinispan.configuration.cache.CacheMode
+import org.infinispan.client.hotrod.RemoteCache
 import org.infinispan.spark.test._
-import org.infinispan.test.AbstractCacheTest._
-import org.scalatest.Matchers
+import org.scalatest.{DoNotDiscover, Matchers}
 
-class ReplicatedSuite extends RDDRetrievalTest with WordCache with Spark with MultipleHotRodServers with Matchers {
-   override protected def numServers: Int = 3
+@DoNotDiscover
+class ReplicatedSuite extends RDDRetrievalTest with WordCache with Spark with RemoteTest with Matchers {
+   override protected def getNumEntries: Int = 100
 
-   override protected def getNumEntries: Int = 10000
+   override def getCache[K, V]: RemoteCache[K, V] = ClusteredServers.getRemoteCacheManager.getCache("replicated").asInstanceOf[RemoteCache[K, V]]
 
-   override protected def getConfigurationBuilder = {
-      val builder = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC, false)
-      builder.dataContainer().keyEquivalence(new AnyServerEquivalence).valueEquivalence(new AnyServerEquivalence)
-      builder
-   }
+   override def getServerPort: Int = ClusteredServers.getServers.head.getHotRodPort
 }

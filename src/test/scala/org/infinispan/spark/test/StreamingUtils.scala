@@ -5,6 +5,7 @@ import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.ReceiverInputDStream
 import org.apache.spark.streaming.receiver.Receiver
 
+import scala.annotation.meta.param
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
@@ -24,7 +25,7 @@ object StreamingUtils {
       override def onStop(): Unit = {}
    }
 
-   class TestInputDStream[T: ClassTag](@transient ssc_ : StreamingContext, of: Seq[T], streamItemEvery: Duration) extends ReceiverInputDStream[T](ssc_) {
+   class TestInputDStream[T: ClassTag](@(transient@param) ssc_ : StreamingContext, of: Seq[T], streamItemEvery: Duration) extends ReceiverInputDStream[T](ssc_) {
       override def getReceiver(): Receiver[T] = new TestReceiver[T](of, streamItemEvery)
    }
 

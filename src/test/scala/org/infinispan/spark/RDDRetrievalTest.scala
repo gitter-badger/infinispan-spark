@@ -27,13 +27,13 @@ abstract class RDDRetrievalTest extends FunSuite with Matchers {
       // Collect and Sort
       val arrayOfTuple = infinispanRDD.collect().sorted
       arrayOfTuple.length shouldBe getNumEntries
-      arrayOfTuple.head shouldBe(1, getRemoteCache.get(1))
+      arrayOfTuple.head shouldBe(1, wordsCache.get(1))
 
       // Max/Min
       val maxEntry = infinispanRDD.max()
       val minEntry = infinispanRDD.min()
-      minEntry shouldBe(1, getRemoteCache get 1)
-      maxEntry shouldBe(getNumEntries, getRemoteCache get getNumEntries)
+      minEntry shouldBe(1, wordsCache get 1)
+      maxEntry shouldBe(getNumEntries, wordsCache get getNumEntries)
 
       // RDD combination operations
       val data = Array(1, 2, 3, 4, 5)
@@ -42,7 +42,7 @@ abstract class RDDRetrievalTest extends FunSuite with Matchers {
       val cartesianRDD = aRDD.cartesian(infinispanRDD)
       cartesianRDD.count shouldBe getNumEntries * data.length
 
-      val first5 = (1 to 5).map(i => (i, getRemoteCache.get(i)))
+      val first5 = (1 to 5).map(i => (i, wordsCache.get(i)))
       val otherRDD = sc.makeRDD(first5)
       val subtractedRDD = infinispanRDD.subtract(otherRDD, numPartitions = 2)
       subtractedRDD.count shouldBe (getNumEntries - otherRDD.count)

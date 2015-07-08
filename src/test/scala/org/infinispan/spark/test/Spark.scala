@@ -3,11 +3,14 @@ package org.infinispan.spark.test
 import java.util.Properties
 
 import org.apache.spark.{SparkConf, SparkContext}
-import org.infinispan.client.hotrod.impl.ConfigurationProperties
 import org.infinispan.spark.rdd.InfinispanRDD
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
-
+/**
+ * Trait to be mixed-in by tests that require a [[org.apache.spark.SparkContext]]
+ *
+ * @author gustavonalle
+ */
 trait Spark extends BeforeAndAfterAll {
    this: Suite with RemoteTest =>
 
@@ -16,7 +19,9 @@ trait Spark extends BeforeAndAfterAll {
 
    def createInfinispanRDD[K, V] = {
       val properties = new Properties()
-      properties.put(ConfigurationProperties.SERVER_LIST, Seq("localhost", pickServer.getPort).mkString(":"))
+      val port = getServerPort
+      properties.put("infinispan.client.hotrod.server_list", Seq("localhost", port).mkString(":"))
+      properties.put("infinispan.rdd.cacheName", getCache.getName)
       new InfinispanRDD[K, V](sc, configuration = properties)
    }
 

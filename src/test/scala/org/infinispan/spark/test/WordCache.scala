@@ -5,6 +5,11 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
 
 import scala.util.Random
 
+/**
+ * Trait to be mixed-in by tests requiring a cache populated with dictionary words.
+ *
+ * @author gustavonalle
+ */
 trait WordCache extends BeforeAndAfterAll {
    this: Suite with RemoteTest =>
 
@@ -39,8 +44,6 @@ trait WordCache extends BeforeAndAfterAll {
       "cluster", "corona", "cosmos", "equinox", "horizon", "light", "nebula",
       "solstice", "spectrum", "universe", "magnitude", "parallax")
 
-   def getRemoteCache[K, V]: RemoteCache[Int, String] = pickCacheManager.getCache.asInstanceOf[RemoteCache[Int, String]]
-
    protected def getNumEntries: Int
 
    private val random = new Random(System.currentTimeMillis())
@@ -49,8 +52,10 @@ trait WordCache extends BeforeAndAfterAll {
 
    private def pickNouns = (for (i <- 0 to random.nextInt(3)) yield randomWordFrom(nouns)).mkString(" ")
 
+   lazy val wordsCache = getCache.asInstanceOf[RemoteCache[Int,String]]
+
    override protected def beforeAll(): Unit = {
-      val wordsCache = getRemoteCache
+      val wordsCache = getCache.asInstanceOf[RemoteCache[Int,String]]
       (1 to getNumEntries).par.foreach { i =>
          val contents = Seq(randomWordFrom(adjs), pickNouns).mkString(" ")
          wordsCache.put(i, contents)

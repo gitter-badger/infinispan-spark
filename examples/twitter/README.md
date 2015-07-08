@@ -52,7 +52,6 @@ import org.apache.spark.streaming.twitter._
 import org.apache.spark.streaming.StreamingContext._ 
 
 import org.infinispan.client.hotrod._
-import org.infinispan.client.hotrod.impl.ConfigurationProperties._
 import org.infinispan.client.hotrod.configuration._
 import org.infinispan.spark.domain._
 import org.infinispan.spark.rdd._
@@ -100,7 +99,7 @@ Let's create a RemoteCache that will hold the data. Paste the following:
 val master = sc.getConf.get("spark.master").replace("spark://","").replaceAll(":.*","")
 
 val config = new Properties
-config.put(SERVER_LIST,s"$master:11222")
+config.put("infinispan.client.hotrod.server_list",s"$master:11222")
 
 val cache = new RemoteCacheManager(new ConfigurationBuilder().addServer().host(master).build).getCache.asInstanceOf[RemoteCache[Long,Tweet]]
 
@@ -239,7 +238,6 @@ import org.apache.spark.streaming._
 import org.apache.spark.streaming.twitter._
 import org.apache.spark.streaming.StreamingContext._ 
 import org.infinispan.client.hotrod._
-import org.infinispan.client.hotrod.impl.ConfigurationProperties._
 import org.infinispan.client.hotrod.configuration._
 import scala.collection.JavaConversions._
 import scala.util.Random
@@ -259,7 +257,7 @@ System.setProperty("twitter4j.oauth.accessTokenSecret", "....")
 val master = sc.getConf.get("spark.master").replace("spark://","").replaceAll(":.*","")
 
 val config = new Properties
-config.put(SERVER_LIST,s"$master:11222")
+config.put("infinispan.client.hotrod.server_list",s"$master:11222")
 
 val cache = new RemoteCacheManager(new ConfigurationBuilder().addServer().host(master).build).getCache.asInstanceOf[RemoteCache[Long,Tweet]]
 

@@ -7,12 +7,11 @@ import org.apache.spark.streaming.scheduler.{StreamingListener, StreamingListene
 import org.infinispan.client.hotrod.RemoteCache
 import org.infinispan.client.hotrod.event.ClientEvent
 import org.infinispan.client.hotrod.event.ClientEvent.Type.{CLIENT_CACHE_ENTRY_CREATED, CLIENT_CACHE_ENTRY_MODIFIED, CLIENT_CACHE_ENTRY_REMOVED}
-import org.infinispan.client.hotrod.impl.ConfigurationProperties
 import org.infinispan.spark.domain.Runner
 import org.infinispan.spark.stream._
 import org.infinispan.spark.test.StreamingUtils.TestInputDStream
-import org.infinispan.spark.test.{SingleHotRodServer, SparkStream}
-import org.scalatest.{FunSuite, Matchers}
+import org.infinispan.spark.test.{RemoteTest, SparkStream}
+import org.scalatest.{DoNotDiscover, FunSuite, Matchers}
 
 import scala.collection._
 import scala.concurrent.duration._
@@ -20,16 +19,17 @@ import scala.concurrent.duration._
 /**
  * @author gustavonalle
  */
-class StreamingSuite extends FunSuite with SparkStream with SingleHotRodServer with Matchers {
+@DoNotDiscover
+class StreamingSuite extends FunSuite with SparkStream with RemoteTest with Matchers {
 
    test("test stream consumer") {
-      val cache = pickCacheManager.getCache.asInstanceOf[RemoteCache[Int, String]]
+      val cache = getCache.asInstanceOf[RemoteCache[Int, String]]
       cache.clear()
 
       val stream = new TestInputDStream(ssc, of = Seq(1 -> "value1", 2 -> "value2", 3 -> "value3"), streamItemEvery = 100 millis)
 
       val props = new Properties()
-      props.put(ConfigurationProperties.SERVER_LIST, s"localhost:${pickServer.getPort}")
+      props.put("infinispan.client.hotrod.server_list", s"localhost:$getServerPort")
 
       stream.writeToInfinispan(props)
 
@@ -44,11 +44,11 @@ class StreamingSuite extends FunSuite with SparkStream with SingleHotRodServer w
    }
 
    test("test stream producer") {
-      val cache = pickCacheManager.getCache.asInstanceOf[RemoteCache[Int, Runner]]
+      val cache = getCache.asInstanceOf[RemoteCache[Int, Runner]]
       cache.clear()
 
       val props = new Properties()
-      props.put(ConfigurationProperties.SERVER_LIST, s"localhost:${pickServer.getPort}")
+      props.put("infinispan.client.hotrod.server_list", s"localhost:$getServerPort")
 
       val stream = new InfinispanInputDStream[Int, Runner](ssc, StorageLevel.MEMORY_ONLY, props)
 
@@ -74,5 +74,4 @@ class StreamingSuite extends FunSuite with SparkStream with SingleHotRodServer w
       streamDump.count { case (_, _, eventType) => eventType == CLIENT_CACHE_ENTRY_REMOVED } shouldBe 1
       streamDump.count { case (_, _, eventType) => eventType == CLIENT_CACHE_ENTRY_MODIFIED } shouldBe 1
    }
-
 }

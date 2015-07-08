@@ -9,7 +9,6 @@ import org.infinispan.commons.marshall._
 
 /**
  * @author gustavonalle
- * @since 8.0
  */
 @SerializeWith(classOf[LogEntrySerializer])
 class LogEntry(val date: LocalDate, var opCode: Int, val userAgent: String, val domain: String)

@@ -1,10 +1,12 @@
 package org.infinispan.spark.test
 
-import org.apache.spark.streaming.{Milliseconds, Seconds, StreamingContext}
+import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfterEach, Suite}
 
 /**
+ * Trait to be mixed-in by tests requiring [[org.apache.spark.streaming.StreamingContext]]
+ *
  * @author gustavonalle
  */
 trait SparkStream extends BeforeAndAfterEach {
