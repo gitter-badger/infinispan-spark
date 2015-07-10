@@ -64,6 +64,7 @@ class InfinispanServer(location: String, name: String, clustered: Boolean = fals
    val LogDirConfig = "-Djboss.server.log.dir"
    val ClusteredConfig = "clustered.xml"
    val PortOffsetConfig = "-Djboss.socket.binding.port-offset"
+   val StackConfig = "-Djboss.default.jgroups.stack=tcp"
 
    val Protocol = "http-remoting"
    val Host = "localhost"
@@ -87,6 +88,7 @@ class InfinispanServer(location: String, name: String, clustered: Boolean = fals
       if (portOffSet > 0) {
          cmd += s"$PortOffsetConfig=$portOffSet"
       }
+      cmd += StackConfig
       launcher = Process(cmd).run(new ProcessLogger {
          override def out(s: => String): Unit = {}
 
